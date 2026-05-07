@@ -22,9 +22,9 @@ interface MetricCardProps {
 
 function MetricCard({ label, value }: MetricCardProps) {
   return (
-    <div className="rounded-md border bg-white p-4">
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-zinc-900">{value}</p>
+    <div className="rounded-xl border border-border bg-background/45 p-4">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
     </div>
   );
 }

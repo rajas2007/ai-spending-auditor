@@ -1,11 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
+import { ArrowRight, Plus } from "lucide-react";
 
 import { ToolEntryFields } from "@/components/forms/tool-entry-fields";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuditForm } from "@/hooks/use-audit-form";
 import type { AuditEngineResult } from "@/lib/audit-engine";
 import { runAuditEngine } from "@/lib/audit-engine";
+import type { AuditUseCase } from "@/types/forms";
 
 interface AuditFormProps {
   onResults: (result: AuditEngineResult) => void;
@@ -35,33 +40,44 @@ export function AuditForm({ onResults }: AuditFormProps) {
     [form.formState.errors.tools],
   );
 
-  const onSubmit = form.handleSubmit((values) => {
-    const input = toAuditEngineInput(values);
+  const onSubmit = form.handleSubmit(() => {
+    const input = toAuditEngineInput();
     const result = runAuditEngine(input);
     onResults(result);
   });
 
   return (
-    <section className="space-y-4 rounded-lg border bg-white p-4">
-      <h2 className="text-lg font-semibold">Spending Audit Inputs</h2>
+    <section className="space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-elevated sm:p-6">
+      <div>
+        <p className="text-xs uppercase tracking-wider text-primary">Audit</p>
+        <h2 className="mt-1 text-xl font-semibold">Spending audit inputs</h2>
+      </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-1 text-sm">
-            <span className="text-zinc-700">Team size</span>
-            <input type="number" min={1} className="w-full rounded border p-2" {...form.register("teamSize")} />
+          <label className="space-y-1.5 text-sm">
+            <span className="text-muted-foreground">Team size</span>
+            <Input type="number" min={1} className="h-10 bg-background/70" {...form.register("teamSize")} />
           </label>
 
-          <label className="space-y-1 text-sm">
-            <span className="text-zinc-700">Global primary use case</span>
-            <select className="w-full rounded border p-2" {...form.register("primaryUseCase")}>
-              <option value="coding">Coding assistant</option>
-              <option value="research">Research and analysis</option>
-              <option value="content">Content and writing</option>
-              <option value="support">Customer support automation</option>
-              <option value="workflow">General workflow automation</option>
-              <option value="api-integration">Backend API integration</option>
-            </select>
+          <label className="space-y-1.5 text-sm">
+            <span className="text-muted-foreground">Global primary use case</span>
+            <Select
+              value={form.watch("primaryUseCase")}
+              onValueChange={(value) => form.setValue("primaryUseCase", value as AuditUseCase)}
+            >
+              <SelectTrigger className="h-10 w-full bg-background/70">
+                <SelectValue placeholder="Select use case" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="coding">Coding assistant</SelectItem>
+                <SelectItem value="research">Research and analysis</SelectItem>
+                <SelectItem value="content">Content and writing</SelectItem>
+                <SelectItem value="support">Customer support automation</SelectItem>
+                <SelectItem value="workflow">General workflow automation</SelectItem>
+                <SelectItem value="api-integration">Backend API integration</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
         </div>
 
@@ -83,16 +99,14 @@ export function AuditForm({ onResults }: AuditFormProps) {
         {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => addTool("chatgpt")}
-            className="rounded border px-3 py-2 text-sm text-zinc-700"
-          >
+          <Button type="button" variant="outline" onClick={() => addTool("chatgpt")} className="h-9">
+            <Plus className="h-4 w-4" />
             Add tool
-          </button>
-          <button type="submit" className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white">
+          </Button>
+          <Button type="submit" className="h-9">
             Run audit
-          </button>
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </form>
     </section>

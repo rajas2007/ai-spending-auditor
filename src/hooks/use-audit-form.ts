@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 
 import type { AuditEngineInput } from "@/lib/audit-engine";
 import { auditFormSchema, createDefaultAuditFormValues, createDefaultToolEntry } from "@/lib/validation";
@@ -37,7 +37,7 @@ export function useAuditForm(options?: UseAuditFormOptions) {
   );
 
   const form = useForm<AuditFormValues>({
-    resolver: zodResolver(auditFormSchema),
+    resolver: zodResolver(auditFormSchema) as Resolver<AuditFormValues>,
     defaultValues,
     mode: "onBlur",
   });
@@ -71,3 +71,5 @@ export function useAuditForm(options?: UseAuditFormOptions) {
       toAuditEngineInput(values ?? form.getValues()),
   };
 }
+
+export type UseAuditFormReturn = ReturnType<typeof useAuditForm>;

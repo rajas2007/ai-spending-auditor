@@ -13,8 +13,12 @@ export default function Home() {
   return (
     <AppShell>
       <div className="grid gap-6 lg:grid-cols-2">
-        <AuditForm onResults={setResult} />
-        <AuditResults result={result} />
+        <section id="audit">
+          <AuditForm onResults={setResult} />
+        </section>
+        <section id="results">
+          <AuditResults result={result} />
+        </section>
       </div>
     </AppShell>
   );
