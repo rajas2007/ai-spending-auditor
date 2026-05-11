@@ -31,7 +31,7 @@ const faqs = [
 
 export function Faq() {
   return (
-    <section id="faq" className="relative py-24 sm:py-32">
+    <section id="faq" className="relative scroll-mt-20 py-24 sm:py-32">
       <div className="mx-auto max-w-3xl px-6">
         <SectionHeader eyebrow="FAQ" title="Questions, answered" />
         <Accordion type="single" collapsible className="mt-10 w-full">

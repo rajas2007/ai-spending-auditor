@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuditForm } from "@/hooks/use-audit-form";
-import type { AuditEngineResult } from "@/lib/audit-engine";
+import type { AuditEngineInput, AuditEngineResult } from "@/lib/audit-engine";
 import { runAuditEngine } from "@/lib/audit-engine";
 import type { AuditUseCase } from "@/types/forms";
 
 interface AuditFormProps {
-  onResults: (result: AuditEngineResult) => void;
+  onResults: (result: AuditEngineResult, input: AuditEngineInput) => void | Promise<void>;
 }
 
 export function AuditForm({ onResults }: AuditFormProps) {
@@ -43,14 +43,14 @@ export function AuditForm({ onResults }: AuditFormProps) {
   const onSubmit = form.handleSubmit(() => {
     const input = toAuditEngineInput();
     const result = runAuditEngine(input);
-    onResults(result);
+    void onResults(result, input);
   });
 
   return (
-    <section className="space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-elevated sm:p-6">
-      <div>
+    <section className="min-w-0 space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-elevated sm:p-6">
+      <div className="min-w-0">
         <p className="text-xs uppercase tracking-wider text-primary">Audit</p>
-        <h2 className="mt-1 text-xl font-semibold">Spending audit inputs</h2>
+        <h2 className="mt-1 break-words text-xl font-semibold">Spending audit inputs</h2>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -92,11 +92,11 @@ export function AuditForm({ onResults }: AuditFormProps) {
               />
             ))
           ) : (
-            <p className="text-sm text-zinc-500">Add at least one AI tool to run an audit.</p>
+            <p className="break-words text-sm text-zinc-500">Add at least one AI tool to run an audit.</p>
           )}
         </div>
 
-        {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
+        {formError ? <p className="break-words text-sm text-red-600">{formError}</p> : null}
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={() => addTool("chatgpt")} className="h-9">

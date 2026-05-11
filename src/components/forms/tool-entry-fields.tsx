@@ -23,7 +23,7 @@ export function ToolEntryFields({ index, form, onRemove }: ToolEntryFieldsProps)
   const selectedPlan = plans.find((plan) => plan.name === selectedPlanName);
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
+    <div className="min-w-0 space-y-3 rounded-xl border border-border bg-background/40 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1.5 text-sm">
           <span className="text-muted-foreground">Tool</span>
@@ -114,7 +114,7 @@ export function ToolEntryFields({ index, form, onRemove }: ToolEntryFieldsProps)
       </div>
 
       {selectedPlan ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="break-words text-xs text-muted-foreground">
           {selectedPlan.description}
           {selectedPlan.targetUseCase ? ` Use case: ${selectedPlan.targetUseCase}` : ""}
         </p>

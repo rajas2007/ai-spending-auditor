@@ -22,7 +22,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative py-24 sm:py-32">
+    <section id="how-it-works" className="relative scroll-mt-20 py-24 sm:py-32">
       <div className="absolute inset-0 bg-grid opacity-30" />
       <div className="relative mx-auto max-w-7xl px-6">
         <SectionHeader eyebrow="How it works" title="From signup to savings in 60 seconds" />

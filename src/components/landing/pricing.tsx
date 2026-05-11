@@ -16,6 +16,7 @@ const tiers = [
       "CSV export",
     ],
     cta: "Run free audit",
+    href: "/audit",
     highlight: false,
   },
   {
@@ -31,6 +32,7 @@ const tiers = [
       "Priority email support",
     ],
     cta: "Start 14-day trial",
+    href: "/signup",
     highlight: true,
   },
   {
@@ -45,6 +47,7 @@ const tiers = [
       "Quarterly business reviews",
     ],
     cta: "Talk to sales",
+    href: "/signup",
     highlight: false,
   },
 ];
@@ -55,14 +58,14 @@ interface PricingProps {
 
 export function Pricing({ onCta }: PricingProps) {
   return (
-    <section id="pricing" className="relative py-24 sm:py-32">
+    <section id="pricing" className="relative scroll-mt-20 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeader eyebrow="Pricing" title="Start free. Pay when it pays for itself." />
         <div className="mt-14 grid gap-4 lg:grid-cols-3">
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`relative flex flex-col rounded-2xl border p-7 ${
+              className={`relative flex min-w-0 flex-col rounded-2xl border p-7 ${
                 tier.highlight
                   ? "border-primary/50 bg-card/70 shadow-[0_0_60px_-15px_oklch(0.66_0.22_295/0.5)]"
                   : "border-border bg-card/30"
@@ -73,23 +76,29 @@ export function Pricing({ onCta }: PricingProps) {
                   Most popular
                 </span>
               ) : null}
-              <div className="text-sm font-medium text-muted-foreground">{tier.name}</div>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-semibold tracking-tight">{tier.price}</span>
-                <span className="text-sm text-muted-foreground">{tier.cadence}</span>
+              <div className="break-words text-sm font-medium text-muted-foreground">{tier.name}</div>
+              <div className="mt-3 flex min-w-0 flex-wrap items-baseline gap-1">
+                <span className="break-words text-4xl font-semibold tracking-tight [overflow-wrap:anywhere]">{tier.price}</span>
+                <span className="break-words text-sm text-muted-foreground">{tier.cadence}</span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{tier.desc}</p>
+              <p className="mt-2 break-words text-sm text-muted-foreground">{tier.desc}</p>
               <ul className="mt-6 space-y-2.5">
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-                    <span className="text-foreground/90">{feature}</span>
+                    <span className="min-w-0 break-words text-foreground/90">{feature}</span>
                   </li>
                 ))}
               </ul>
-              <Button onClick={onCta} variant={tier.highlight ? "hero" : "outline"} className="mt-7" size="lg">
-                {tier.cta}
-              </Button>
+              {onCta ? (
+                <Button onClick={onCta} variant={tier.highlight ? "hero" : "outline"} className="mt-7" size="lg">
+                  {tier.cta}
+                </Button>
+              ) : (
+                <Button variant={tier.highlight ? "hero" : "outline"} className="mt-7" size="lg" asChild>
+                  <a href={tier.href}>{tier.cta}</a>
+                </Button>
+              )}
             </div>
           ))}
         </div>

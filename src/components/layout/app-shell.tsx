@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+"use client";
+
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
@@ -15,14 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Container } from "./container";
 import { SiteHeader } from "./site-header";
 
-interface AppShellProps {
-  children: ReactNode;
-}
-
-export function AppShell({ children }: AppShellProps) {
-  const scrollToAudit = () =>
-    document.getElementById("audit")?.scrollIntoView({ behavior: "smooth", block: "start" });
-
+export function AppShell() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-radial-glow" />
@@ -84,7 +78,7 @@ export function AppShell({ children }: AppShellProps) {
                 className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
               >
                 <Button variant="hero" size="xl" asChild className="group">
-                  <a href="#audit">
+                  <a href="/audit">
                     Run free audit
                     <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
                   </a>
@@ -122,13 +116,45 @@ export function AppShell({ children }: AppShellProps) {
         <Features />
         <Stats />
         <HowItWorks />
-        <Container className="py-8 sm:py-10">{children}</Container>
-        <Pricing onCta={scrollToAudit} />
+        <Testimonials />
+        <Pricing />
         <ConsultationCta />
         <Faq />
         <Footer />
       </main>
     </div>
+  );
+}
+
+function Testimonials() {
+  const quotes = [
+    ["Aethra found two redundant AI subscriptions before our finance review even started.", "Maya Chen", "COO, VoltScale"],
+    ["The audit reads like a sharp infrastructure analyst, not a generic SaaS report.", "Ishan Rao", "Founder, Northstar ML"],
+    ["We used the recommendations to trim spend without slowing down engineering.", "Elena Brooks", "VP Engineering, Kestrel"],
+  ];
+
+  return (
+    <section className="relative py-24 sm:py-32">
+      <Container>
+        <div className="mb-12 max-w-2xl">
+          <p className="text-xs uppercase tracking-wider text-primary">Teams</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Built for operators who need the AI bill to make sense.
+          </h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {quotes.map(([quote, name, role]) => (
+            <article key={name} className="rounded-2xl border border-border bg-card/40 p-6 shadow-card">
+              <p className="text-sm leading-6 text-foreground/90">&ldquo;{quote}&rdquo;</p>
+              <div className="mt-6">
+                <p className="text-sm font-medium">{name}</p>
+                <p className="text-xs text-muted-foreground">{role}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Container>
+    </section>
   );
 }
 
