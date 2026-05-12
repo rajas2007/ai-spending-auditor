@@ -16,21 +16,63 @@ import { FREE_AUDIT_HISTORY_LIMIT } from "@/types/subscription";
 
 export function DashboardRoute() {
   const { user, profile } = useAuth();
-  const [audits, setAudits] = useState<StoredAudit[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const userId = user?.id;
+  const [dashboardState, setDashboardState] = useState<{
+    userId: string | null;
+    audits: StoredAudit[];
+    error: string | null;
+    isLoading: boolean;
+  }>({
+    userId: null,
+    audits: [],
+    error: null,
+    isLoading: false,
+  });
+  const audits = useMemo(
+    () => (dashboardState.userId === userId ? dashboardState.audits : []),
+    [dashboardState.audits, dashboardState.userId, userId],
+  );
+  const error = dashboardState.userId === userId ? dashboardState.error : null;
+  const isLoading = Boolean(userId) && (dashboardState.userId !== userId || dashboardState.isLoading);
   const tier = profile?.subscriptionTier ?? "free";
   const { visibleAudits, lockedAudits } = useMemo(() => splitAuditsByTier(audits, tier), [audits, tier]);
   const analytics = useMemo(() => buildDashboardAnalytics(visibleAudits), [visibleAudits]);
 
   useEffect(() => {
-    if (!user) return;
+    let cancelled = false;
 
-    listAuditsForUser(user.id)
-      .then(setAudits)
-      .catch((err) => setError(err instanceof Error ? err.message : "Unable to load dashboard data."))
-      .finally(() => setIsLoading(false));
-  }, [user]);
+    if (!userId) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    listAuditsForUser(userId)
+      .then((records) => {
+        if (!cancelled) {
+          setDashboardState({
+            userId,
+            audits: records,
+            error: null,
+            isLoading: false,
+          });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setDashboardState({
+            userId,
+            audits: [],
+            error: err instanceof Error ? err.message : "Unable to load dashboard data.",
+            isLoading: false,
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   return (
     <ProductShell>

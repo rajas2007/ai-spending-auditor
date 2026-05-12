@@ -12,21 +12,57 @@ import type { StoredAudit } from "@/types/stored-audit";
 
 export function ReportRoute({ reportId }: { reportId: string }) {
   const { user } = useAuth();
-  const [audit, setAudit] = useState<StoredAudit | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const userId = user?.id;
+  const [reportState, setReportState] = useState<{
+    userId: string | null;
+    reportId: string | null;
+    audit: StoredAudit | null;
+    error: string | null;
+  }>({
+    userId: null,
+    reportId: null,
+    audit: null,
+    error: null,
+  });
+  const isCurrentReport = reportState.userId === userId && reportState.reportId === reportId;
+  const audit = isCurrentReport ? reportState.audit : null;
+  const error = isCurrentReport ? reportState.error : null;
+  const isLoading = Boolean(userId) && !isCurrentReport;
 
   useEffect(() => {
-    if (!user) return;
+    let cancelled = false;
 
-    getAuditForUser(user.id, reportId)
+    if (!userId) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getAuditForUser(userId, reportId)
       .then((record) => {
-        setAudit(record);
-        setError(record ? null : "This report was not found in your workspace.");
+        if (cancelled) return;
+        setReportState({
+          userId,
+          reportId,
+          audit: record,
+          error: record ? null : "This report was not found in your workspace.",
+        });
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Unable to load this report."))
-      .finally(() => setIsLoading(false));
-  }, [reportId, user]);
+      .catch((err) => {
+        if (!cancelled) {
+          setReportState({
+            userId,
+            reportId,
+            audit: null,
+            error: err instanceof Error ? err.message : "Unable to load this report.",
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reportId, userId]);
 
   return (
     <ProductShell>

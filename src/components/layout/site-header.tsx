@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { Logo } from "@/components/brand/logo";
@@ -20,9 +20,25 @@ const links = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const { isAuthenticated, isLoading, profile, signOut } = useAuth();
+  const { isAuthenticated, isLoading, profile, user, signOut } = useAuth();
+  const displayName = profile?.fullName || profile?.company || user?.user_metadata?.full_name || user?.email || "Aethra user";
+  const displayEmail = profile?.email || user?.email || "Signed in";
+  const initials = useMemo(() => {
+    const source = profile?.fullName || profile?.company || user?.email || "Aethra";
+    return source
+      .split(/[\s@._-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("");
+  }, [profile?.company, profile?.fullName, user?.email]);
 
-  function handleAnchorClick(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
+  async function handleSignOut() {
+    setOpen(false);
+    await signOut();
+  }
+
+  function handleAnchorClick(event: MouseEvent<HTMLAnchorElement>, href: string) {
     if (!href.startsWith("/#")) return;
     if (window.location.pathname !== "/") return;
 
@@ -55,16 +71,24 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          {isAuthenticated ? (
+          {isLoading ? (
+            <span className="hidden h-8 w-28 animate-pulse rounded-full border border-border bg-card/45 sm:inline-flex" />
+          ) : isAuthenticated ? (
             <>
-              <span className="hidden max-w-40 truncate text-xs text-muted-foreground lg:inline">
-                {profile?.company || profile?.email}
-              </span>
+              <div className="hidden min-w-0 items-center gap-2 rounded-full border border-border bg-card/45 px-2.5 py-1.5 shadow-card lg:flex">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/15 text-[11px] font-semibold text-primary">
+                  {initials || <UserRound className="h-3.5 w-3.5" />}
+                </span>
+                <span className="min-w-0 leading-tight">
+                  <span className="block max-w-36 truncate text-xs font-medium text-foreground">{displayName}</span>
+                  <span className="block max-w-36 truncate text-[11px] text-muted-foreground">{displayEmail}</span>
+                </span>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 className="hidden sm:inline-flex"
-                onClick={() => void signOut()}
+                onClick={() => void handleSignOut()}
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -110,18 +134,24 @@ export function SiteHeader() {
                 Run free audit
               </a>
             </Button>
-            {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setOpen(false);
-                  void signOut();
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
+            {isLoading ? (
+              <span className="my-2 h-10 animate-pulse rounded-xl border border-border bg-card/45" />
+            ) : isAuthenticated ? (
+              <>
+                <div className="my-2 flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card/45 p-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/15 text-xs font-semibold text-primary">
+                    {initials || <UserRound className="h-4 w-4" />}
+                  </span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block truncate text-sm font-medium">{displayName}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{displayEmail}</span>
+                  </span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => void handleSignOut()}>
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
             ) : (
               <Button variant="ghost" size="sm" asChild>
                 <a href="/login" onClick={() => setOpen(false)}>

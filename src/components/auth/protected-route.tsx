@@ -9,11 +9,11 @@ import { ProductShell } from "@/components/layout/product-shell";
 import { Button } from "@/components/ui/button";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isInitialized, isLoading } = useAuth();
   const pathname = usePathname();
   const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
 
-  if (isLoading) {
+  if (!isInitialized || isLoading) {
     return (
       <ProductShell className="grid min-h-[calc(100vh-4rem)] place-items-center">
         <div className="glass flex items-center gap-3 rounded-2xl px-5 py-4 text-sm text-muted-foreground">
