@@ -44,18 +44,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  console.log("[REPORT PAGE] params.id:", id);
   
   let audit: StoredAudit | null = null;
   let error: string | null = null;
 
   try {
-    console.log("[REPORT PAGE] Calling getPublicAuditById with id:", id);
     audit = await getPublicAuditById(id);
-    console.log("[REPORT PAGE] getPublicAuditById returned:", audit ? { id: audit.id, userId: audit.userId, hasResult: Boolean(audit.result) } : null);
   } catch (err) {
     error = err instanceof Error ? err.message : "Unable to load this report.";
-    console.error("[REPORT PAGE] Error fetching audit:", error);
   }
 
   let safeAudit = audit;
@@ -64,6 +60,5 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     safeAudit = JSON.parse(JSON.stringify(audit));
   }
 
-  console.log("[REPORT PAGE] Rendering ReportRoute with:", { reportId: id, auditNull: safeAudit === null, hasError: error !== null });
   return <ReportRoute reportId={id} initialAudit={safeAudit} initialError={error} />;
 }

@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Check, Download, Save, Share2, ShieldCheck, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
-import { AuditResults } from "@/components/audit/audit-results";
+const AuditResults = dynamic(() => import("@/components/audit/audit-results").then(mod => mod.AuditResults), {
+  ssr: false,
+  loading: () => <div className="glass rounded-2xl p-8 text-center text-sm text-muted-foreground animate-pulse">Loading visualizations...</div>
+});
 import { AuditForm } from "@/components/forms/audit-form";
 import { LeadForm } from "@/components/forms/lead-form";
 import { ProductShell } from "@/components/layout/product-shell";
 import { Button } from "@/components/ui/button";
 import { attachAuditSummary, buildDeterministicAuditSummary } from "@/lib/audit-summary";
 import { saveAudit } from "@/lib/audit-storage";
-import { debugAuditStructure } from "@/lib/audit-normalization";
-import { exportAuditToPDF } from "@/lib/export-pdf";
 import type { AuditEngineInput, AuditEngineResult } from "@/lib/audit-engine";
 import type { StoredAudit } from "@/types/stored-audit";
 
@@ -75,10 +77,8 @@ export function AuditWorkspace() {
         website,
       });
       
-      console.log("[AUDIT DEBUG] Saved audit:", audit.id);
       setSavedAudit(audit);
     } catch (error) {
-      console.error("[AUDIT ERROR] Save failed:", error);
       setSaveError(error instanceof Error ? error.message : "Audit completed but could not be saved.");
     } finally {
       setIsSaving(false);
@@ -120,9 +120,10 @@ export function AuditWorkspace() {
 
     setIsExporting(true);
     try {
+      const { exportAuditToPDF } = await import("@/lib/export-pdf");
       await exportAuditToPDF(savedAudit, profile?.company || profile?.fullName);
-    } catch (err) {
-      console.error("PDF Export failed:", err);
+    } catch {
+      // Silent fail or minimal error handling
     } finally {
       setIsExporting(false);
     }

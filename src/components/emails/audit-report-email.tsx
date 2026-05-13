@@ -31,7 +31,7 @@ export const AuditReportEmail = ({
           Hello {company ? `Team ${company}` : "there"},
         </p>
         <p style={pStyle}>
-          We've completed our analysis of your AI tool stack. Below is a summary of our findings and potential optimizations.
+          We&apos;ve completed our analysis of your AI tool stack. Below is a summary of our findings and potential optimizations.
         </p>
 
         <div style={kpiGridStyle}>

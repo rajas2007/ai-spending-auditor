@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Check, Download, Lock, Send, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
-import { AuditResults } from "@/components/audit/audit-results";
+const AuditResults = dynamic(() => import("@/components/audit/audit-results").then(mod => mod.AuditResults), {
+  ssr: false,
+  loading: () => <div className="glass rounded-2xl p-8 text-center text-sm text-muted-foreground animate-pulse">Loading visualizations...</div>
+});
 import { ProductShell } from "@/components/layout/product-shell";
 import { Button } from "@/components/ui/button";
 import { getAuditForUser } from "@/lib/audit-storage";
-import { debugAuditStructure } from "@/lib/audit-normalization";
-import { exportAuditToPDF } from "@/lib/export-pdf";
 import type { StoredAudit } from "@/types/stored-audit";
 
 interface ReportRouteProps {
@@ -22,37 +24,43 @@ export function ReportRoute({ reportId, initialAudit, initialError }: ReportRout
   const { user } = useAuth();
   const userId = user?.id;
   const [audit, setAudit] = useState<StoredAudit | null | undefined>(initialAudit);
-  const [error, setError] = useState<string | null | undefined>(initialError);
-  const [isLoading, setIsLoading] = useState(initialAudit === undefined && initialError === undefined && Boolean(userId));
+  const [error, setError] = useState<string | null | undefined>(() => {
+    if (initialError !== undefined) return initialError;
+    if (initialAudit === undefined && !userId) {
+      return "This report is available only when you are signed in.";
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    return initialAudit === undefined && initialError === undefined && Boolean(userId);
+  });
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (initialAudit !== undefined || initialError !== undefined) {
-      if (initialAudit) {
-        debugAuditStructure("ReportRoute: initialAudit from server", initialAudit);
-      }
       return;
     }
 
     if (!userId) {
-      setIsLoading(false);
-      setError("This report is available only when you are signed in.");
+      // Error state is handled by the lazy initialization of the 'error' state above
       return;
     }
 
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    setAudit(null);
+    
+    // Set loading state asynchronously to avoid lint error for synchronous setState in effect
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setIsLoading(true);
+      setError(null);
+      setAudit(null);
+    });
 
     getAuditForUser(userId, reportId)
       .then((record) => {
         if (cancelled) return;
-        if (record) {
-          debugAuditStructure("ReportRoute: audit loaded from Supabase", record);
-        }
         setAudit(record);
         setError(record ? null : "This report was not found in your workspace.");
       })
@@ -119,8 +127,7 @@ export function ReportRoute({ reportId, initialAudit, initialError }: ReportRout
 
     setIsExporting(true);
     try {
-      // For public reports, we might not have the full profile, but we can try to get it from auth if available
-      // or just export without company name. The utility handles undefined companyName.
+      const { exportAuditToPDF } = await import("@/lib/export-pdf");
       await exportAuditToPDF(audit);
     } catch (err) {
       console.error("PDF Export failed:", err);

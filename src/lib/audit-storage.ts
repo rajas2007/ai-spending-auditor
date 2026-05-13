@@ -87,7 +87,7 @@ export async function getAuditForUser(userId: string, auditId: string): Promise<
     if (error) throw new Error(error.message);
     
     // Enforce ownership if a user ID is provided
-    if (data && userId && (data as any).user_id !== userId) {
+    if (data && userId && (data as { user_id: string }).user_id !== userId) {
       return null;
     }
     return data ? toStoredAudit(data as Record<string, unknown>) : null;

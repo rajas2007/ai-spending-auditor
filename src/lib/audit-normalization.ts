@@ -21,56 +21,8 @@ function isValidToolId(value: unknown): value is AIToolId {
 /**
  * Debug: Log complete audit structure for comparison
  */
-export function debugAuditStructure(label: string, audit: StoredAudit | null) {
-  if (!audit) {
-    console.log(`[AUDIT DEBUG] ${label}: null`);
-    return;
-  }
-
-  console.log(`[AUDIT DEBUG] ${label}:`, {
-    id: audit.id,
-    userId: audit.userId,
-    createdAt: audit.createdAt,
-    input: {
-      teamSize: audit.input.teamSize,
-      tools: audit.input.tools?.map((t) => ({
-        toolId: t.toolId,
-        selectedPlanName: t.selectedPlanName,
-        monthlySpendUsd: t.monthlySpendUsd,
-        seats: t.seats,
-      })),
-      primaryUseCase: audit.input.primaryUseCase,
-    },
-    result: {
-      totalMonthlySpendUsd: typeof audit.result.totalMonthlySpendUsd,
-      totalAnnualSpendUsd: typeof audit.result.totalAnnualSpendUsd,
-      estimatedMonthlySavingsUsd: typeof audit.result.estimatedMonthlySavingsUsd,
-      estimatedAnnualSavingsUsd: typeof audit.result.estimatedAnnualSavingsUsd,
-      optimizationScore: typeof audit.result.optimizationScore,
-      personalizedSummary: typeof audit.result.personalizedSummary,
-      summarySource: audit.result.summarySource,
-      summaryGeneratedAt: audit.result.summaryGeneratedAt,
-      recommendationsCount: audit.result.recommendations?.length ?? 0,
-      recommendationsStructure: audit.result.recommendations?.[0] && {
-        id: audit.result.recommendations[0].id,
-        type: audit.result.recommendations[0].type,
-        priority: audit.result.recommendations[0].priority,
-        title: audit.result.recommendations[0].title,
-        toolId: audit.result.recommendations[0].toolId,
-        estimatedMonthlySavingsUsd: typeof audit.result.recommendations[0].estimatedMonthlySavingsUsd,
-        currentSituation: typeof audit.result.recommendations[0].currentSituation,
-        suggestedAction: typeof audit.result.recommendations[0].suggestedAction,
-        financialReasoning: typeof audit.result.recommendations[0].financialReasoning,
-      },
-      toolBreakdownCount: audit.result.toolBreakdown?.length ?? 0,
-      toolBreakdownStructure: audit.result.toolBreakdown?.[0] && {
-        toolId: audit.result.toolBreakdown[0].toolId,
-        selectedPlanName: audit.result.toolBreakdown[0].selectedPlanName,
-        computedMonthlyCostUsd: typeof audit.result.toolBreakdown[0].computedMonthlyCostUsd,
-        primaryUseCase: audit.result.toolBreakdown[0].primaryUseCase,
-      },
-    },
-  });
+export function debugAuditStructure() {
+  // Debug logging disabled for production performance
 }
 
 /**
@@ -203,7 +155,7 @@ function normalizeToolBreakdown(tool: unknown) {
     toolId,
     selectedPlanName: String(obj.selectedPlanName ?? ""),
     computedMonthlyCostUsd: toNumber(obj.computedMonthlyCostUsd, 0),
-    primaryUseCase: ((): any => {
+    primaryUseCase: ((): string => {
       const val = String(obj.primaryUseCase ?? "other");
       const validCases = ["coding", "research", "content", "support", "workflow", "api-integration", "other"];
       return validCases.includes(val) ? val : "other";

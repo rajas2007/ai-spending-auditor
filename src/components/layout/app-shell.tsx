@@ -1,16 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { ArrowRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
-import { ConsultationCta } from "@/components/landing/consultation-cta";
-import { Faq } from "@/components/landing/faq";
-import { Features } from "@/components/landing/features";
-import { Footer } from "@/components/landing/footer";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { LogoCloud } from "@/components/landing/logo-cloud";
-import { Pricing } from "@/components/landing/pricing";
-import { Stats } from "@/components/landing/stats";
+const ConsultationCta = dynamic(() => import("@/components/landing/consultation-cta").then(mod => mod.ConsultationCta));
+const Faq = dynamic(() => import("@/components/landing/faq").then(mod => mod.Faq));
+const Features = dynamic(() => import("@/components/landing/features").then(mod => mod.Features));
+const Footer = dynamic(() => import("@/components/landing/footer").then(mod => mod.Footer));
+const HowItWorks = dynamic(() => import("@/components/landing/how-it-works").then(mod => mod.HowItWorks));
+const LogoCloud = dynamic(() => import("@/components/landing/logo-cloud").then(mod => mod.LogoCloud));
+const Pricing = dynamic(() => import("@/components/landing/pricing").then(mod => mod.Pricing));
+const Stats = dynamic(() => import("@/components/landing/stats").then(mod => mod.Stats));
+
 import { Button } from "@/components/ui/button";
 
 import { Container } from "./container";

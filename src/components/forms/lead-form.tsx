@@ -82,7 +82,7 @@ export function LeadForm({ auditId, onSuccess }: LeadFormProps) {
         </div>
         <h3 className="text-lg font-semibold text-emerald-100">Report sent!</h3>
         <p className="mt-2 text-sm text-emerald-200/70">
-          Check your inbox. We've sent the full audit summary and a link to your interactive report.
+          Check your inbox. We&apos;ve sent the full audit summary and a link to your interactive report.
         </p>
       </div>
     );

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
-    const { email, company, role, teamSize, auditId, website } = body;
+    const { email, company, role, teamSize, auditId } = body;
 
 
     if (!email || !auditId) {
@@ -65,9 +65,6 @@ export async function POST(request: Request) {
     });
 
     if (mailError) {
-      console.error("[LEADS API] Resend error:", mailError);
-      // If Resend is not configured (e.g. missing API key), we might get an error here
-      // We check if it's just a missing API key for graceful local dev
       if (mailError.name === "missing_api_key") {
         return NextResponse.json({
           success: true,
@@ -79,7 +76,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data });
   } catch (err) {
-    console.error("[LEADS API] Unhandled error:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal server error." },
       { status: 500 }

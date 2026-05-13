@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 
 import { ToolEntryFields } from "@/components/forms/tool-entry-fields";

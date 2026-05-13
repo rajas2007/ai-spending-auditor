@@ -19,37 +19,22 @@ function toStoredAudit(row: Record<string, unknown>): StoredAudit {
 }
 
 export async function getPublicAuditById(auditId: string): Promise<StoredAudit | null> {
-  console.log("[AUDIT PUBLIC] getPublicAuditById called with auditId:", auditId);
-  
   const supabase = getSupabaseServerClient();
-  console.log("[AUDIT PUBLIC] Supabase client exists:", Boolean(supabase));
-  console.log("[AUDIT PUBLIC] Supabase configured:", isSupabaseConfigured());
-
   if (supabase && isSupabaseConfigured()) {
-    console.log("[AUDIT PUBLIC] Executing Supabase query for audit id:", auditId);
     const { data, error } = await supabase
       .rpc("get_public_audit_by_id", { p_audit_id: auditId })
       .maybeSingle();
 
-    console.log("[AUDIT PUBLIC] Supabase query error:", error?.message || "none");
-    console.log("[AUDIT PUBLIC] Supabase query data:", data ? { id: (data as any).id, user_id: (data as any).user_id, hasResult: Boolean((data as any).result), hasInput: Boolean((data as any).input) } : null);
-
     if (error) {
-      console.error("[AUDIT PUBLIC] Query error details:", error);
       throw new Error(error.message);
     }
     
     if (!data) {
-      console.log("[AUDIT PUBLIC] No data returned from query");
       return null;
     }
     
-    console.log("[AUDIT PUBLIC] Converting to StoredAudit and normalizing");
-    const result = toStoredAudit(data as Record<string, unknown>);
-    console.log("[AUDIT PUBLIC] Normalization complete, returning audit");
-    return result;
+    return toStoredAudit(data as Record<string, unknown>);
   }
 
-  console.warn("[AUDIT PUBLIC] Supabase not configured, returning null");
   return null;
 }
