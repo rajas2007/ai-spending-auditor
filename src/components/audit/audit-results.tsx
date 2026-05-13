@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuditEngineResult } from "@/lib/audit-engine";
-import { AlertTriangle, ArrowDownRight, TrendingDown } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, FileText, Loader2, TrendingDown } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -20,9 +20,10 @@ import { TOOL_LABELS } from "@/data/tool-options";
 
 interface AuditResultsProps {
   result: AuditEngineResult | null;
+  isSummaryLoading?: boolean;
 }
 
-export function AuditResults({ result }: AuditResultsProps) {
+export function AuditResults({ result, isSummaryLoading = false }: AuditResultsProps) {
   if (!result) {
     return (
       <section className="min-w-0 rounded-2xl border border-border bg-card/60 p-6">
@@ -57,6 +58,29 @@ export function AuditResults({ result }: AuditResultsProps) {
       </div>
 
       <MetricsOverview result={result} />
+
+      <div className="min-w-0 rounded-xl border border-primary/25 bg-primary/10 p-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+            {isSummaryLoading ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+            ) : (
+              <FileText className="h-4 w-4 shrink-0 text-primary" />
+            )}
+            Personalized audit summary
+          </p>
+          {result.summarySource === "fallback" ? (
+            <span className="shrink-0 rounded-full border border-border bg-background/45 px-2 py-0.5 text-xs text-muted-foreground">
+              Template fallback
+            </span>
+          ) : null}
+        </div>
+        <p className="break-words text-sm leading-6 text-muted-foreground">
+          {isSummaryLoading
+            ? "Aethra is turning the deterministic audit output into a concise finance-ready narrative."
+            : result.personalizedSummary ?? "Summary generation has not run for this audit yet."}
+        </p>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="min-w-0 rounded-xl border border-border bg-background/45 p-4">

@@ -14,9 +14,10 @@ import type { AuditUseCase } from "@/types/forms";
 
 interface AuditFormProps {
   onResults: (result: AuditEngineResult, input: AuditEngineInput) => void | Promise<void>;
+  isBusy?: boolean;
 }
 
-export function AuditForm({ onResults }: AuditFormProps) {
+export function AuditForm({ onResults, isBusy = false }: AuditFormProps) {
   const { form, toolsFieldArray, addTool, removeTool, toAuditEngineInput } = useAuditForm({
     // Start with one row for simpler MVP interaction.
     initialValues: {
@@ -103,8 +104,8 @@ export function AuditForm({ onResults }: AuditFormProps) {
             <Plus className="h-4 w-4" />
             Add tool
           </Button>
-          <Button type="submit" className="h-9">
-            Run audit
+          <Button type="submit" className="h-9" disabled={isBusy}>
+            {isBusy ? "Running audit..." : "Run audit"}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

@@ -47,6 +47,10 @@ export interface AuditEngineResult {
   totalAnnualSpendUsd: number;
   estimatedMonthlySavingsUsd: number;
   estimatedAnnualSavingsUsd: number;
+  optimizationScore: number;
+  personalizedSummary?: string;
+  summarySource?: "ai" | "fallback";
+  summaryGeneratedAt?: string;
   recommendations: AuditRecommendationDetail[];
   toolBreakdown: AuditedToolBreakdown[];
 }
@@ -141,6 +145,11 @@ function buildRecommendation(
 
 function roundCurrency(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function calculateOptimizationScore(totalMonthlySpendUsd: number, estimatedMonthlySavingsUsd: number): number {
+  const savingsRate = totalMonthlySpendUsd > 0 ? estimatedMonthlySavingsUsd / totalMonthlySpendUsd : 0;
+  return Math.max(42, Math.min(98, Math.round(72 + savingsRate * 100)));
 }
 
 function evaluateTeamPlanOverkillRule(
@@ -327,6 +336,7 @@ export function runAuditEngine(input: AuditEngineInput): AuditEngineResult {
     totalAnnualSpendUsd: roundCurrency(totalMonthlySpendUsd * 12),
     estimatedMonthlySavingsUsd,
     estimatedAnnualSavingsUsd: roundCurrency(estimatedMonthlySavingsUsd * 12),
+    optimizationScore: calculateOptimizationScore(totalMonthlySpendUsd, estimatedMonthlySavingsUsd),
     recommendations,
     toolBreakdown: evaluatedTools.map((tool) => ({
       toolId: tool.toolId,

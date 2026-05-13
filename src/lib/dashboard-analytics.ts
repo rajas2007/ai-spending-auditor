@@ -36,7 +36,7 @@ export function buildDashboardAnalytics(audits: StoredAudit[]): DashboardAnalyti
     annualSpendUsd: roundCurrency(monthlySpendUsd * 12),
     monthlySavingsUsd,
     annualSavingsUsd: roundCurrency(monthlySavingsUsd * 12),
-    optimizationScore: Math.max(42, Math.min(98, Math.round(72 + savingsRate * 100))),
+    optimizationScore: latest?.optimizationScore ?? Math.max(42, Math.min(98, Math.round(72 + savingsRate * 100))),
     recommendationCount: latest?.recommendations.length ?? 0,
     toolBreakdown:
       latest?.toolBreakdown.map((tool) => ({

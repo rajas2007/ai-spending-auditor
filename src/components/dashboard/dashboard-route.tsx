@@ -199,7 +199,7 @@ export function DashboardRoute() {
           {visibleAudits.map((audit) => (
             <a
               key={audit.id}
-              href={`/report/${audit.id}`}
+              href={`/r/${audit.id}`}
               className="flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-background/35 p-4 transition-colors hover:border-primary/40 hover:bg-card/60 sm:flex-row sm:items-center sm:justify-between"
             >
               <span className="min-w-0">

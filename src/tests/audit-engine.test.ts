@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { buildDeterministicAuditSummary } from "@/lib/audit-summary";
 import { evaluateToolSpend, runAuditEngine } from "@/lib/audit-engine";
 
 describe("audit-engine", () => {
@@ -122,5 +123,20 @@ describe("audit-engine", () => {
 
     expect(result.totalMonthlySpendUsd).toBe(42);
     expect(result.totalAnnualSpendUsd).toBe(504);
+  });
+
+  it("builds a deterministic fallback summary from calculated audit outputs", () => {
+    const input = {
+      teamSize: 2,
+      primaryUseCase: "coding" as const,
+      tools: [{ toolId: "claude" as const, selectedPlanName: "Team", seats: 2, primaryUseCase: "coding" as const }],
+    };
+    const result = runAuditEngine(input);
+    const summary = buildDeterministicAuditSummary({ input, result });
+
+    expect(summary).toContain("$60.00 per month");
+    expect(summary).toContain(`$${result.estimatedMonthlySavingsUsd.toFixed(2)} in monthly savings`);
+    expect(summary).toContain("Team plan may be overkill");
+    expect(summary).toContain(`optimization score of ${result.optimizationScore}`);
   });
 });
