@@ -53,8 +53,8 @@ as $$
   where id = p_audit_id;
 $$;
 
-create policy "Users can insert own audits" on public.audits
-  for insert with check (auth.uid() = user_id);
+create policy "Anyone can insert audits" on public.audits
+  for insert with check (true);
 
 create policy "Users can update own audits" on public.audits
   for update using (auth.uid() = user_id);

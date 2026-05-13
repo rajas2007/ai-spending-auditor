@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 
 import { ToolEntryFields } from "@/components/forms/tool-entry-fields";
@@ -13,7 +13,7 @@ import { runAuditEngine } from "@/lib/audit-engine";
 import type { AuditUseCase } from "@/types/forms";
 
 interface AuditFormProps {
-  onResults: (result: AuditEngineResult, input: AuditEngineInput) => void | Promise<void>;
+  onResults: (result: AuditEngineResult, input: AuditEngineInput, website?: string) => void | Promise<void>;
   isBusy?: boolean;
 }
 
@@ -36,25 +36,45 @@ export function AuditForm({ onResults, isBusy = false }: AuditFormProps) {
 
   const hasTools = toolsFieldArray.fields.length > 0;
 
+
   const formError = useMemo(
     () => form.formState.errors.tools?.message?.toString(),
     [form.formState.errors.tools],
   );
 
-  const onSubmit = form.handleSubmit(() => {
+  const onSubmit = form.handleSubmit((values) => {
+    // 1. Honeypot check
+    if (values.website) {
+      console.warn("[AUDIT FORM] Honeypot triggered");
+      // Silently stop - legitimate users won't see this
+      return;
+    }
+
     const input = toAuditEngineInput();
     const result = runAuditEngine(input);
-    void onResults(result, input);
+    void onResults(result, input, values.website);
   });
 
   return (
-    <section className="min-w-0 space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-elevated sm:p-6">
+    <section className="relative min-w-0 space-y-5 rounded-2xl border border-border bg-card/60 p-5 shadow-elevated sm:p-6">
       <div className="min-w-0">
         <p className="text-xs uppercase tracking-wider text-primary">Audit</p>
         <h2 className="mt-1 break-words text-xl font-semibold">Spending audit inputs</h2>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
+        {/* Honeypot field - hidden from users */}
+        <div className="absolute -z-10 h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+          <label htmlFor="website">Website</label>
+          <input
+            id="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            {...form.register("website")}
+          />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1.5 text-sm">
             <span className="text-muted-foreground">Team size</span>

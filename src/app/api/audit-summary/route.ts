@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid audit summary request." }, { status: 400 });
   }
 
+
   if (!payload.input || !payload.result) {
     return NextResponse.json({ error: "Audit input and result are required." }, { status: 400 });
   }

@@ -15,6 +15,7 @@ const leadSchema = z.object({
   company: z.string().min(2, "Company name is required."),
   role: z.string().min(2, "Role is required."),
   teamSize: z.string().min(1, "Team size is required."),
+  website: z.string().optional(), // Honeypot field
 });
 
 type LeadFormValues = z.infer<typeof leadSchema>;
@@ -38,6 +39,14 @@ export function LeadForm({ auditId, onSuccess }: LeadFormProps) {
   });
 
   async function onSubmit(data: LeadFormValues) {
+    // 1. Honeypot check
+    if (data.website) {
+      console.warn("[LEAD FORM] Honeypot triggered");
+      setIsSubmitted(true); // Silently accept
+      if (onSuccess) onSuccess();
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -92,6 +101,18 @@ export function LeadForm({ auditId, onSuccess }: LeadFormProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Honeypot field - hidden from users */}
+        <div className="absolute -z-10 h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+          <label htmlFor="website">Website</label>
+          <input
+            id="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            {...register("website")}
+          />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="email">Work Email</Label>

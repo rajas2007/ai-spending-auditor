@@ -16,7 +16,8 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
-    const { email, company, role, teamSize, auditId } = body;
+    const { email, company, role, teamSize, auditId, website } = body;
+
 
     if (!email || !auditId) {
       return NextResponse.json(

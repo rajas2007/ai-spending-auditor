@@ -60,6 +60,7 @@ export const auditFormSchema = z
     primaryUseCase: useCaseSchema,
     tools: z.array(auditToolEntrySchema).min(1, "Add at least one tool"),
     leadCapture: leadCaptureSchema.optional(),
+    website: z.string().optional(), // Honeypot field
   })
   .superRefine((value, ctx) => {
     const selectedCount = value.tools.filter((tool) => tool.isSelected).length;

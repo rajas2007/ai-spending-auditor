@@ -56,7 +56,7 @@ export function AuditWorkspace() {
     }
   }
 
-  async function handleResults(nextResult: AuditEngineResult, input: AuditEngineInput) {
+  async function handleResults(nextResult: AuditEngineResult, input: AuditEngineInput, website?: string) {
     setResult(nextResult);
     setSavedAudit(null);
     setSaveError(null);
@@ -72,6 +72,7 @@ export function AuditWorkspace() {
         userId: user?.id, // Can be undefined for guests
         input,
         result: summarizedResult,
+        website,
       });
       
       console.log("[AUDIT DEBUG] Saved audit:", audit.id);

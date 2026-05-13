@@ -32,7 +32,7 @@ export async function getPublicAuditById(auditId: string): Promise<StoredAudit |
       .maybeSingle();
 
     console.log("[AUDIT PUBLIC] Supabase query error:", error?.message || "none");
-    console.log("[AUDIT PUBLIC] Supabase query data:", data ? { id: data.id, user_id: data.user_id, hasResult: Boolean(data.result), hasInput: Boolean(data.input) } : null);
+    console.log("[AUDIT PUBLIC] Supabase query data:", data ? { id: (data as any).id, user_id: (data as any).user_id, hasResult: Boolean((data as any).result), hasInput: Boolean((data as any).input) } : null);
 
     if (error) {
       console.error("[AUDIT PUBLIC] Query error details:", error);
@@ -45,7 +45,7 @@ export async function getPublicAuditById(auditId: string): Promise<StoredAudit |
     }
     
     console.log("[AUDIT PUBLIC] Converting to StoredAudit and normalizing");
-    const result = toStoredAudit(data);
+    const result = toStoredAudit(data as Record<string, unknown>);
     console.log("[AUDIT PUBLIC] Normalization complete, returning audit");
     return result;
   }

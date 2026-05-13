@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Download, Lock, Send, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
@@ -147,10 +147,10 @@ export function ReportRoute({ reportId, initialAudit, initialError }: ReportRout
             {copyStatus ? <Check className="h-4 w-4" /> : <Send className="h-4 w-4" />}
             {isCopying ? "Copying…" : copyStatus || "Share link"}
           </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            onClick={handleExport} 
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleExport}
             disabled={isExporting || !audit}
           >
             {isExporting ? <Sparkles className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}

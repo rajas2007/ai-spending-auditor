@@ -31,4 +31,5 @@ export interface AuditFormValues {
   primaryUseCase: AuditUseCase;
   tools: AuditToolFormEntry[];
   leadCapture?: LeadCaptureFields;
+  website?: string; // Honeypot field
 }

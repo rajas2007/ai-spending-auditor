@@ -87,16 +87,18 @@ export async function getAuditForUser(userId: string, auditId: string): Promise<
     if (error) throw new Error(error.message);
     
     // Enforce ownership if a user ID is provided
-    if (data && userId && data.user_id !== userId) {
+    if (data && userId && (data as any).user_id !== userId) {
       return null;
     }
-    return data ? toStoredAudit(data) : null;
+    return data ? toStoredAudit(data as Record<string, unknown>) : null;
   }
 
   return readLocalAudits().find((audit) => audit.userId === userId && audit.id === auditId) ?? null;
 }
 
-export async function saveAudit(audit: Omit<StoredAudit, "id" | "createdAt" | "userId"> & { userId?: string }): Promise<StoredAudit> {
+export async function saveAudit(
+  audit: Omit<StoredAudit, "id" | "createdAt" | "userId"> & { userId?: string; website?: string }
+): Promise<StoredAudit> {
   const supabase = getSupabaseBrowserClient();
   const createdAt = new Date().toISOString();
 
