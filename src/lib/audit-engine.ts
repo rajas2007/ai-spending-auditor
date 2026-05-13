@@ -6,7 +6,7 @@ import type {
 } from "@/types/audit";
 import type { AIToolId } from "@/types/pricing";
 
-type UseCaseKey =
+export type UseCaseKey =
   | "coding"
   | "research"
   | "content"

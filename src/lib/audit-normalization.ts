@@ -5,7 +5,7 @@
  * Addresses data shape mismatches from JSON serialization/deserialization round-trips.
  */
 
-import type { AuditEngineResult, AuditRecommendationDetail } from "@/lib/audit-engine";
+import type { AuditEngineResult, AuditRecommendationDetail, AuditedToolBreakdown, UseCaseKey } from "@/lib/audit-engine";
 import type { RecommendationType, RecommendationPriority } from "@/types/audit";
 import type { AIToolId } from "@/types/pricing";
 import { SUPPORTED_AI_TOOLS } from "@/types/pricing";
@@ -143,7 +143,7 @@ function isValidPriority(value: unknown): value is RecommendationPriority {
 /**
  * Normalize a tool breakdown entry to ensure proper structure
  */
-function normalizeToolBreakdown(tool: unknown) {
+function normalizeToolBreakdown(tool: unknown): AuditedToolBreakdown {
   if (!tool || typeof tool !== "object") {
     throw new Error("Invalid tool breakdown structure");
   }
@@ -155,10 +155,10 @@ function normalizeToolBreakdown(tool: unknown) {
     toolId,
     selectedPlanName: String(obj.selectedPlanName ?? ""),
     computedMonthlyCostUsd: toNumber(obj.computedMonthlyCostUsd, 0),
-    primaryUseCase: ((): string => {
+    primaryUseCase: ((): UseCaseKey => {
       const val = String(obj.primaryUseCase ?? "other");
-      const validCases = ["coding", "research", "content", "support", "workflow", "api-integration", "other"];
-      return validCases.includes(val) ? val : "other";
+      const validCases: UseCaseKey[] = ["coding", "research", "content", "support", "workflow", "api-integration", "other"];
+      return validCases.includes(val as UseCaseKey) ? (val as UseCaseKey) : "other";
     })(),
   };
 }
