@@ -50,6 +50,54 @@ function writeLocalAuth(state: LocalAuthState | null) {
   window.localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(state));
 }
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    return String((error as { message?: unknown }).message ?? "");
+  }
+  return String(error ?? "");
+}
+
+export function isRecoverableAuthSessionError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes("refresh token") ||
+    message.includes("invalid session") ||
+    message.includes("session not found") ||
+    message.includes("jwt expired")
+  );
+}
+
+function clearStoredSupabaseAuthTokens() {
+  if (typeof window === "undefined") return;
+  const storageBuckets = [window.localStorage, window.sessionStorage];
+
+  for (const storage of storageBuckets) {
+    for (let index = storage.length - 1; index >= 0; index -= 1) {
+      const key = storage.key(index);
+      if (key?.startsWith("sb-") && key.endsWith("-auth-token")) {
+        storage.removeItem(key);
+      }
+    }
+  }
+}
+
+export async function clearSupabaseLocalSession() {
+  clearStoredSupabaseAuthTokens();
+  writeLocalAuth(null);
+
+  const supabase = getSupabaseBrowserClient();
+
+  try {
+    await supabase?.auth.signOut({ scope: "local" });
+  } catch {
+    // The local session may already be invalid or partially cleared.
+  } finally {
+    clearStoredSupabaseAuthTokens();
+  }
+}
+
 export function getLocalAuthState() {
   return readLocalAuth();
 }
@@ -58,13 +106,30 @@ export async function getCurrentSession(): Promise<{ session: Session | null; us
   const supabase = getSupabaseBrowserClient();
 
   if (supabase) {
-    const { data } = await supabase.auth.getSession();
-    const user = data.session?.user ?? null;
-    return {
-      session: data.session,
-      user,
-      profile: user ? await getOrCreateProfile(user) : null,
-    };
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        if (isRecoverableAuthSessionError(error)) {
+          await clearSupabaseLocalSession();
+        }
+
+        return { session: null, user: null, profile: null };
+      }
+
+      const user = data.session?.user ?? null;
+      return {
+        session: data.session,
+        user,
+        profile: user ? await getOrCreateProfile(user) : null,
+      };
+    } catch (error) {
+      if (isRecoverableAuthSessionError(error)) {
+        await clearSupabaseLocalSession();
+        return { session: null, user: null, profile: null };
+      }
+
+      throw error;
+    }
   }
 
   const local = readLocalAuth();
@@ -125,7 +190,13 @@ export async function signOut() {
   const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { error } = await supabase.auth.signOut();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (isRecoverableAuthSessionError(error)) {
+        await clearSupabaseLocalSession();
+      } else {
+        throw new Error(error.message);
+      }
+    }
   }
   writeLocalAuth(null);
 }

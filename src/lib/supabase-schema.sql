@@ -53,8 +53,15 @@ as $$
   where id = p_audit_id;
 $$;
 
-create policy "Anyone can insert audits" on public.audits
-  for insert with check (true);
+drop policy if exists "Anyone can insert audits" on public.audits;
+drop policy if exists "Authenticated users can insert own audits" on public.audits;
+drop policy if exists "Anonymous users can insert guest audits" on public.audits;
+
+create policy "Authenticated users can insert own audits" on public.audits
+  for insert to authenticated with check (auth.uid() = user_id);
+
+create policy "Anonymous users can insert guest audits" on public.audits
+  for insert to anon with check (user_id is null);
 
 create policy "Users can update own audits" on public.audits
   for update using (auth.uid() = user_id);

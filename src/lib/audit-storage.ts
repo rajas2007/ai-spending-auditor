@@ -2,6 +2,7 @@
 
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 import { normalizeStoredAudit } from "@/lib/audit-normalization";
+import { clearSupabaseLocalSession, isRecoverableAuthSessionError } from "@/lib/auth";
 import type { StoredAudit } from "@/types/stored-audit";
 import type { SubscriptionTier } from "@/types/subscription";
 import { FREE_AUDIT_HISTORY_LIMIT } from "@/types/subscription";
@@ -44,6 +45,30 @@ function toStoredAudit(row: Record<string, unknown>): StoredAudit {
   };
   // Normalize the result to ensure consistent structure after DB round-trip
   return normalizeStoredAudit(audit);
+}
+
+async function getCurrentSupabaseAccessToken() {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      if (isRecoverableAuthSessionError(error)) {
+        await clearSupabaseLocalSession();
+      }
+      return null;
+    }
+
+    return data.session?.access_token ?? null;
+  } catch (error) {
+    if (isRecoverableAuthSessionError(error)) {
+      await clearSupabaseLocalSession();
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export function splitAuditsByTier(audits: StoredAudit[], tier: SubscriptionTier) {
@@ -103,18 +128,29 @@ export async function saveAudit(
   const createdAt = new Date().toISOString();
 
   if (supabase && isSupabaseConfigured()) {
-    const { data, error } = await supabase
-      .from("audits")
-      .insert({
-        user_id: audit.userId,
+    const accessToken = await getCurrentSupabaseAccessToken();
+    const response = await fetch("/api/audits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify({
         input: audit.input,
         result: audit.result,
-      })
-      .select("id,user_id,input,result,created_at")
-      .single();
+      }),
+    });
 
-    if (error) throw new Error(error.message);
-    return toStoredAudit(data);
+    const payload = (await response.json()) as {
+      audit?: Record<string, unknown>;
+      error?: string;
+    };
+
+    if (!response.ok || !payload.audit) {
+      throw new Error(payload.error || "Audit could not be saved.");
+    }
+
+    return toStoredAudit(payload.audit);
   }
 
   const storedAudit: StoredAudit = {

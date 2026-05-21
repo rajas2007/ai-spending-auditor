@@ -3,7 +3,13 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import { getCurrentSession, getOrCreateProfile, signOut as signOutUser } from "@/lib/auth";
+import {
+  clearSupabaseLocalSession,
+  getCurrentSession,
+  getOrCreateProfile,
+  isRecoverableAuthSessionError,
+  signOut as signOutUser,
+} from "@/lib/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { UserProfile } from "@/types/subscription";
 
@@ -28,6 +34,14 @@ interface AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const ANONYMOUS_AUTH_STATE: AuthState = {
+  session: null,
+  user: null,
+  profile: null,
+  isLoading: false,
+  isInitialized: true,
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     session: null,
@@ -41,6 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applyAuthState = useCallback((nextState: Partial<AuthState>, syncId: number) => {
     if (syncId !== syncIdRef.current) return;
     setState((current) => ({ ...current, ...nextState }));
+  }, []);
+
+  const recoverAnonymousSession = useCallback(async () => {
+    syncIdRef.current += 1;
+    await clearSupabaseLocalSession();
+    setState(ANONYMOUS_AUTH_STATE);
   }, []);
 
   const refreshSession = useCallback(async () => {
@@ -60,15 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         syncId,
       );
-    } catch {
+    } catch (error) {
+      if (isRecoverableAuthSessionError(error)) {
+        await clearSupabaseLocalSession();
+      }
+
       applyAuthState(
-        {
-          session: null,
-          user: null,
-          profile: null,
-          isLoading: false,
-          isInitialized: true,
-        },
+        ANONYMOUS_AUTH_STATE,
         syncId,
       );
     }
@@ -133,6 +151,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [hydrateFromSession, refreshSession]);
 
+  useEffect(() => {
+    function handleUnhandledRejection(event: PromiseRejectionEvent) {
+      if (!isRecoverableAuthSessionError(event.reason)) return;
+      event.preventDefault();
+      void recoverAnonymousSession();
+    }
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    return () => {
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
+  }, [recoverAnonymousSession]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session: state.session,
@@ -144,13 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshSession,
       signOut: async () => {
         syncIdRef.current += 1;
-        setState({
-          session: null,
-          user: null,
-          profile: null,
-          isLoading: false,
-          isInitialized: true,
-        });
+        setState(ANONYMOUS_AUTH_STATE);
         await signOutUser();
       },
     }),
