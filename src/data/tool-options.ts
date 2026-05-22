@@ -1,6 +1,6 @@
 import type { AIToolId } from "@/types/pricing";
 
-import { AI_TOOL_PRICING } from "./pricing-data";
+import { AI_TOOL_PRICING } from "@/config/pricing";
 
 export interface SelectOption {
   value: string;
