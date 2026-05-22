@@ -30,6 +30,8 @@ export function getSupabaseBrowserClient() {
 export function getSupabaseServerClient() {
   if (!isSupabaseConfigured()) return null;
 
-  serverClient ??= createClient(supabaseServerUrl!, supabaseServerKey!);
+  // If a placeholder service role key is present, ignore it and fall back to the anon key.
+  const effectiveKey = (supabaseServerKey && !supabaseServerKey.includes('placeholder')) ? supabaseServerKey : supabaseAnonKey;
+  serverClient ??= createClient(supabaseServerUrl!, effectiveKey!);
   return serverClient;
 }
