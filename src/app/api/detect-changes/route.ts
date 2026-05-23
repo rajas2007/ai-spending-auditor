@@ -4,7 +4,7 @@ import { PRICING_VERSION } from "@/config/pricing";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
 
   console.log(`[DETECT CHANGES] Starting change detection. Current version: ${PRICING_VERSION}`);
 

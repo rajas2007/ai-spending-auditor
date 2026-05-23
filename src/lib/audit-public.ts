@@ -47,3 +47,28 @@ export async function getPublicAuditById(auditId: string): Promise<StoredAudit |
 
   return null;
 }
+
+export async function getLatestReauditForAudit(auditId: string): Promise<StoredAudit | null> {
+  const supabase = getSupabaseServerClient();
+  if (supabase && isSupabaseConfigured()) {
+    const { data, error } = await supabase
+      .from("audits")
+      .select("id, user_id, input, result, pricing_version_used, pricing_snapshot_used, created_at")
+      .eq("reaudit_of", auditId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    if (!data) {
+      return null;
+    }
+    
+    return toStoredAudit(data as Record<string, unknown>);
+  }
+
+  return null;
+}

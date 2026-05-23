@@ -3,14 +3,6 @@ import { runAuditEngine } from "@/lib/audit-engine";
 import { PRICING_VERSION, getPricingSnapshot } from "@/config/pricing";
 import { getSupabaseServerClient, getSupabaseAdminClient } from "@/lib/supabase";
 
-// Helper to get user id if authenticated
-async function getUserId(supabase: any, accessToken: string | null): Promise<string | null> {
-  if (!accessToken) return null;
-  const { data, error } = await supabase.auth.getUser();
-  if (error) return null;
-  return data.user?.id ?? null;
-}
-
 export async function POST(request: Request, { params }: { params: Promise<{ auditId: string }> }) {
   try {
     const { auditId } = await params;
