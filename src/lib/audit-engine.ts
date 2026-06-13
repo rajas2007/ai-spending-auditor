@@ -1,10 +1,11 @@
-import { AI_TOOL_PRICING_BY_ID } from "@/data/pricing-data";
+import { AI_TOOL_PRICING_BY_ID, PRICING_VERSION, getPricingSnapshot } from "@/config/pricing";
 import type {
   AuditRecommendation,
   RecommendationPriority,
   RecommendationType,
 } from "@/types/audit";
 import type { AIToolId } from "@/types/pricing";
+import type { PricingSnapshot, ToolPricingCatalogItem } from "@/config/pricing";
 
 export type UseCaseKey =
   | "coding"
@@ -43,6 +44,8 @@ export interface AuditedToolBreakdown {
 }
 
 export interface AuditEngineResult {
+  pricingVersionUsed?: string;
+  pricingSnapshotUsed?: PricingSnapshot;
   totalMonthlySpendUsd: number;
   totalAnnualSpendUsd: number;
   estimatedMonthlySavingsUsd: number;
@@ -86,10 +89,11 @@ function normalizeSeatCount(rawSeats: number | undefined, teamSize: number): num
 function computeMonthlyCostUsd(
   input: AuditInputTool,
   teamSize: number,
+  pricingById: Record<AIToolId, ToolPricingCatalogItem> = AI_TOOL_PRICING_BY_ID,
 ): { monthlyCostUsd: number; seats: number } {
-  const catalog = AI_TOOL_PRICING_BY_ID[input.toolId];
-  const plan = catalog.plans.find((entry) => entry.name === input.selectedPlanName);
+  const catalog = pricingById[input.toolId];
   const seats = normalizeSeatCount(input.seats, teamSize);
+  const plan = catalog?.plans.find((entry) => entry.name === input.selectedPlanName);
 
   if (!plan) {
     return { monthlyCostUsd: Math.max(0, input.monthlySpendUsd ?? 0), seats };
@@ -312,8 +316,17 @@ export function evaluateToolSpend(input: AuditEngineInput): AuditedToolBreakdown
 }
 
 export function runAuditEngine(input: AuditEngineInput): AuditEngineResult {
+  const pricingSnapshotUsed = getPricingSnapshot();
+  const pricingById = pricingSnapshotUsed.tools.reduce(
+    (acc, item) => {
+      acc[item.toolId] = item;
+      return acc;
+    },
+    {} as Record<AIToolId, ToolPricingCatalogItem>,
+  );
+
   const evaluatedTools: EvaluatedTool[] = input.tools.map((toolInput) => {
-    const { monthlyCostUsd, seats } = computeMonthlyCostUsd(toolInput, input.teamSize);
+    const { monthlyCostUsd, seats } = computeMonthlyCostUsd(toolInput, input.teamSize, pricingById);
     return {
       toolId: toolInput.toolId,
       selectedPlanName: toolInput.selectedPlanName,
@@ -332,6 +345,8 @@ export function runAuditEngine(input: AuditEngineInput): AuditEngineResult {
   );
 
   return {
+    pricingVersionUsed: PRICING_VERSION,
+    pricingSnapshotUsed,
     totalMonthlySpendUsd,
     totalAnnualSpendUsd: roundCurrency(totalMonthlySpendUsd * 12),
     estimatedMonthlySavingsUsd,

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+import { PRICING_VERSION, getPricingSnapshot } from "@/config/pricing";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -60,6 +62,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const pricingVersionUsed = body.pricingVersionUsed ?? result.pricingVersionUsed ?? PRICING_VERSION;
+    const pricingSnapshotUsed = body.pricingSnapshotUsed ?? result.pricingSnapshotUsed ?? getPricingSnapshot();
     const auditId = crypto.randomUUID();
     const createdAt = new Date().toISOString();
     const insertPayload = {
@@ -67,6 +71,8 @@ export async function POST(request: Request) {
       user_id: userId,
       input,
       result,
+      pricing_version_used: pricingVersionUsed,
+      pricing_snapshot_used: pricingSnapshotUsed,
       created_at: createdAt,
     };
 

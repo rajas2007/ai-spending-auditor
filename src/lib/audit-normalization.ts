@@ -6,6 +6,7 @@
  */
 
 import type { AuditEngineResult, AuditRecommendationDetail, AuditedToolBreakdown, UseCaseKey } from "@/lib/audit-engine";
+import type { PricingSnapshot } from "@/config/pricing";
 import type { RecommendationType, RecommendationPriority } from "@/types/audit";
 import type { AIToolId } from "@/types/pricing";
 import { SUPPORTED_AI_TOOLS } from "@/types/pricing";
@@ -74,6 +75,8 @@ export function normalizeAuditResult(result: unknown): AuditEngineResult {
     : [];
 
   return {
+    pricingVersionUsed: toString(obj.pricingVersionUsed),
+    pricingSnapshotUsed: normalizePricingSnapshot(obj.pricingSnapshotUsed),
     totalMonthlySpendUsd,
     totalAnnualSpendUsd,
     estimatedMonthlySavingsUsd,
@@ -87,6 +90,18 @@ export function normalizeAuditResult(result: unknown): AuditEngineResult {
     recommendations,
     toolBreakdown,
   };
+}
+
+function normalizePricingSnapshot(value: unknown): PricingSnapshot | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.version !== "string" || !Array.isArray(obj.tools)) return undefined;
+
+  return {
+    version: obj.version,
+    tools: obj.tools,
+  } as PricingSnapshot;
 }
 
 /**
@@ -186,9 +201,12 @@ function toString(value: unknown): string | undefined {
  */
 export function normalizeStoredAudit(audit: StoredAudit): StoredAudit {
   try {
+    const result = normalizeAuditResult(audit.result);
     return {
       ...audit,
-      result: normalizeAuditResult(audit.result),
+      result,
+      pricingVersionUsed: audit.pricingVersionUsed ?? result.pricingVersionUsed,
+      pricingSnapshotUsed: audit.pricingSnapshotUsed ?? result.pricingSnapshotUsed,
     };
   } catch (error) {
     console.error("[AUDIT NORMALIZE] Failed to normalize audit:", error, audit);

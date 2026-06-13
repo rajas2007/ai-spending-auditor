@@ -14,8 +14,17 @@ create table if not exists public.audits (
   user_id uuid references auth.users(id) on delete cascade, -- Optional for guest audits
   input jsonb not null,
   result jsonb not null,
+  pricing_version_used text,
+  pricing_snapshot_used jsonb,
+  reaudit_of uuid references public.audits(id),
   created_at timestamptz not null default now()
 );
+
+-- Ensure columns exist if table already created
+alter table public.audits
+  add column if not exists pricing_version_used text,
+  add column if not exists pricing_snapshot_used jsonb,
+  add column if not exists reaudit_of uuid references public.audits(id);
 
 alter table public.profiles enable row level security;
 alter table public.audits enable row level security;
@@ -42,13 +51,15 @@ returns table (
   user_id uuid,
   input jsonb,
   result jsonb,
+  pricing_version_used text,
+  pricing_snapshot_used jsonb,
   created_at timestamptz
 )
 language sql
 security definer
 set search_path = public
 as $$
-  select id, user_id, input, result, created_at
+  select id, user_id, input, result, pricing_version_used, pricing_snapshot_used, created_at
   from public.audits
   where id = p_audit_id;
 $$;

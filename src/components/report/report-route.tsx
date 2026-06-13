@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Check, Download, Lock, Send, Sparkles } from "lucide-react";
+import { Check, Download, Lock, Send, Sparkles, ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 const AuditResults = dynamic(() => import("@/components/audit/audit-results").then(mod => mod.AuditResults), {
@@ -18,9 +19,11 @@ interface ReportRouteProps {
   reportId: string;
   initialAudit?: StoredAudit | null;
   initialError?: string | null;
+  relatedReaudit?: StoredAudit | null;
 }
 
-export function ReportRoute({ reportId, initialAudit, initialError }: ReportRouteProps) {
+export function ReportRoute({ reportId, initialAudit, initialError, relatedReaudit }: ReportRouteProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id;
   const [audit, setAudit] = useState<StoredAudit | null | undefined>(initialAudit);
@@ -177,6 +180,28 @@ export function ReportRoute({ reportId, initialAudit, initialError }: ReportRout
           </div>
         </div>
       </div>
+
+      {relatedReaudit ? (
+        <div className="mb-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">A newer re-audit exists</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Compare this audit with the latest re-audit to see what has changed.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/compare/${reportId}/${relatedReaudit.id}`)}
+              className="shrink-0"
+            >
+              <ArrowRight className="h-4 w-4" />
+              View comparison
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {copyStatus ? (
         <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-100">

@@ -3,6 +3,7 @@
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 import { normalizeStoredAudit } from "@/lib/audit-normalization";
 import { clearSupabaseLocalSession, isRecoverableAuthSessionError } from "@/lib/auth";
+import { PRICING_VERSION, getPricingSnapshot } from "@/config/pricing";
 import type { StoredAudit } from "@/types/stored-audit";
 import type { SubscriptionTier } from "@/types/subscription";
 import { FREE_AUDIT_HISTORY_LIMIT } from "@/types/subscription";
@@ -35,12 +36,21 @@ function toStoredAudit(row: Record<string, unknown>): StoredAudit {
   // If the DB returned the analytics flattened on the row rather than in a result column,
   // we fallback to using the entire row as the raw result object.
   const rawResult = row.result !== undefined && row.result !== null ? row.result : row;
+  const resultObject = rawResult && typeof rawResult === "object" ? rawResult as Record<string, unknown> : {};
 
   const audit: StoredAudit = {
     id: String(row.id),
     userId: row.user_id ? String(row.user_id) : undefined,
     input: row.input as StoredAudit["input"],
     result: rawResult as StoredAudit["result"],
+    pricingVersionUsed: typeof row.pricing_version_used === "string"
+      ? row.pricing_version_used
+      : typeof resultObject.pricingVersionUsed === "string"
+        ? resultObject.pricingVersionUsed
+        : undefined,
+    pricingSnapshotUsed: row.pricing_snapshot_used
+      ? row.pricing_snapshot_used as StoredAudit["pricingSnapshotUsed"]
+      : resultObject.pricingSnapshotUsed as StoredAudit["pricingSnapshotUsed"],
     createdAt: String(row.created_at),
   };
   // Normalize the result to ensure consistent structure after DB round-trip
@@ -90,7 +100,7 @@ export async function listAuditsForUser(userId: string): Promise<StoredAudit[]> 
   if (supabase && isSupabaseConfigured()) {
     const { data, error } = await supabase
       .from("audits")
-      .select("id,user_id,input,result,created_at")
+      .select("id,user_id,input,result,pricing_version_used,pricing_snapshot_used,created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -138,6 +148,8 @@ export async function saveAudit(
       body: JSON.stringify({
         input: audit.input,
         result: audit.result,
+        pricingVersionUsed: audit.pricingVersionUsed ?? audit.result.pricingVersionUsed ?? PRICING_VERSION,
+        pricingSnapshotUsed: audit.pricingSnapshotUsed ?? audit.result.pricingSnapshotUsed ?? getPricingSnapshot(),
       }),
     });
 
@@ -155,6 +167,8 @@ export async function saveAudit(
 
   const storedAudit: StoredAudit = {
     ...audit,
+    pricingVersionUsed: audit.pricingVersionUsed ?? audit.result.pricingVersionUsed ?? PRICING_VERSION,
+    pricingSnapshotUsed: audit.pricingSnapshotUsed ?? audit.result.pricingSnapshotUsed ?? getPricingSnapshot(),
     id: crypto.randomUUID(),
     createdAt,
   };

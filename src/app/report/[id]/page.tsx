@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { ReportRoute } from "@/components/report/report-route";
-import { getPublicAuditById } from "@/lib/audit-public";
+import { getPublicAuditById, getLatestReauditForAudit } from "@/lib/audit-public";
 import type { StoredAudit } from "@/types/stored-audit";
 
 export const dynamic = "force-dynamic";
@@ -46,10 +46,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   
   let audit: StoredAudit | null = null;
+  let reaudit: StoredAudit | null = null;
   let error: string | null = null;
 
   try {
     audit = await getPublicAuditById(id);
+    if (audit) {
+      reaudit = await getLatestReauditForAudit(id);
+    }
   } catch (err) {
     error = err instanceof Error ? err.message : "Unable to load this report.";
   }
@@ -60,5 +64,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     safeAudit = JSON.parse(JSON.stringify(audit));
   }
 
-  return <ReportRoute reportId={id} initialAudit={safeAudit} initialError={error} />;
+  let safeReaudit = reaudit;
+  if (reaudit) {
+    // Strip undefined values to prevent Next.js serialization issues across Server/Client boundary
+    safeReaudit = JSON.parse(JSON.stringify(reaudit));
+  }
+
+  return <ReportRoute reportId={id} initialAudit={safeAudit} initialError={error} relatedReaudit={safeReaudit} />;
 }

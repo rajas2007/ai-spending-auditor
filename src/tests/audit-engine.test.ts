@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PRICING_VERSION } from "@/config/pricing";
 import { buildDeterministicAuditSummary } from "@/lib/audit-summary";
 import { evaluateToolSpend, runAuditEngine } from "@/lib/audit-engine";
 
@@ -17,6 +18,18 @@ describe("audit-engine", () => {
     // Cursor Pro (20 * 3 seats) + ChatGPT Plus (20) = 80
     expect(result.totalMonthlySpendUsd).toBe(80);
     expect(result.totalAnnualSpendUsd).toBe(960);
+  });
+
+  it("attaches the pricing version and snapshot used for the audit", () => {
+    const result = runAuditEngine({
+      teamSize: 1,
+      primaryUseCase: "coding",
+      tools: [{ toolId: "cursor", selectedPlanName: "Pro", seats: 1, primaryUseCase: "coding" }],
+    });
+
+    expect(result.pricingVersionUsed).toBe(PRICING_VERSION);
+    expect(result.pricingSnapshotUsed?.version).toBe(PRICING_VERSION);
+    expect(result.pricingSnapshotUsed?.tools.some((tool) => tool.toolId === "cursor")).toBe(true);
   });
 
   it("detects downgrade opportunity for team/business plans with very low seats", () => {
