@@ -10,8 +10,6 @@ The platform combines deterministic pricing analysis with AI-generated summaries
 - plan overkill
 - operational AI spend visibility
 
-Built as part of the Credex Web Development Internship assignment.
-
 ---
 
 # Live Deployment
