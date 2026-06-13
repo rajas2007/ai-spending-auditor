@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 
-import { AI_TOOL_PRICING_BY_ID } from "@/data/pricing-data";
+import { AI_TOOL_PRICING_BY_ID } from "@/config/pricing";
 import { TOOL_SELECT_OPTIONS, TOOL_USE_CASE_OPTIONS } from "@/data/tool-options";
 import type { UseAuditFormReturn } from "@/hooks/use-audit-form";
 import { Button } from "@/components/ui/button";
